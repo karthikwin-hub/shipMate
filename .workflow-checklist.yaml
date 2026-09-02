@@ -1,0 +1,19 @@
+qa_manual_checklist:
+  - id: smoke_login
+    label: "Verify user login and JWT session persistence"
+    type: "manual"
+
+  - id: api_health
+    label: "Verify /api/v1/health returns 200"
+    type: "automated_command"
+    command: "curl -s -o /dev/null -w '%{http_code}' http://localhost:8000/api/v1/health | grep 200"
+
+prod_pre_deploy_checklist:
+  - id: db_migration_needed
+    label: "Run Django/Prisma DB migrations before restart"
+    type: "automated_command"
+    command: "python manage.py migrate --check"
+
+  - id: env_keys
+    label: "Verify new STRIPE_PUBLIC_KEY is set in remote .env"
+    type: "manual"

@@ -1,0 +1,12 @@
+qa_checklist:
+  - id: smoke_login
+    label: "Verify user login & session persistence in browser"
+    type: "manual"
+  - id: test_payment_webhook
+    label: "Test Stripe webhook checkout response"
+    type: "manual"
+
+prod_checklist:
+  - id: db_backup_verified
+    label: "Ensure database backup has snapshot created"
+    type: "manual"

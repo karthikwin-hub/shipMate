@@ -1,0 +1,9 @@
+1. Install dependencies:
+Bash
+pip install -r requirements.txt
+
+2. Start the dashboard:
+Bash
+streamlit run app.py
+
+Open http://localhost:8501 in your browser.

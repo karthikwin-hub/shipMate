@@ -1,0 +1,17 @@
+deploy:
+  provider: oracle_vm
+  health_url: https://api.example.com/health
+  live_url: https://api.example.com
+
+  oracle_vm:
+    host: 129.153.x.x
+    user: ubuntu
+    key_path: ~/.ssh/id_rsa
+    remote_path: /var/www/myapp
+    backup_command: "git rev-parse HEAD > .last_stable_commit"
+    deploy_command: "git pull origin main"
+    restart_command: "docker compose up -d --build"
+
+secrets:
+  required: []
+  remote_env_check: true

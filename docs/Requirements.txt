@@ -1,0 +1,104 @@
+Build a robust, standalone, single-page local DevOps & QA dashboard named "ShipMate" using Python and Streamlit. The application must orchestrate a 3-tier delivery workflow (Windows Dev -> Linux QA -> Oracle Cloud VM Prod) across any selected repository with zero LLM token waste.
+
+---
+
+### 1. Branding & UI Design
+- Application Header:
+  * Embed a custom, crisp SVG logo mark (a modern nautical hexagon icon with Git branch chevrons in a blue/emerald gradient) alongside the wordmark "ShipMate".
+  * Subtitle: "DEV • QA • PROD CROSS-ENVIRONMENT GATEWAY".
+  * Set page configuration: `st.set_page_config(page_title="ShipMate | Pipeline Dashboard", page_icon="🚢", layout="wide")`.
+- Visual Theme & Badges:
+  * Dark/light mode compatible CSS.
+  * Status badges: `#3B82F6` (Active/Primary), `#10B981` (Passed/Live), `#F59E0B` (Pending/Manual Check), `#EF4444` (Blocked/Failed).
+
+---
+
+### 2. Standalone Architecture & Dynamic Project Target
+- Standalone Tool: ShipMate runs independently in its own repository and manages other target projects.
+- Project Folder Selector: Input/file picker to target any local repository path on the system.
+- Tech Stack Auto-Detection: Automatically detects runtimes and test runners (Node.js/`package.json`, Python/`pytest`/`FastAPI`/`Django`, Go, Rust, or Docker Compose).
+- State Persistence: Uses Streamlit Session State to track current stage, progress, and logs across interactions.
+
+---
+
+### 3. Header & Git Identity Context Panel
+At the top of the interface, display a live status card showing:
+- Target Repository Path & Sync Status.
+- Committer Identity: Active `git config user.name` and `git config user.email`.
+- Git Details: Remote `origin` URL, current branch name, and active GitHub PR status (via `gh pr view` or API fallback: PR #, Title, Review Status, Link).
+- Identity Override Section: Expandable panel allowing the user to configure or override the Git `user.name`, `user.email`, or remote URL locally for the selected project (`git config --local`).
+
+---
+
+### 4. Dynamic "Checklist as Code" Engine
+- Support an optional `.workflow-checklist.yaml` (or `.json`) file located in the root of the target project repository.
+- Dynamically parse and render:
+  * Stage 2 (QA) custom checklists:
+    - Automated command verifications (e.g., custom API smoke tests, health check endpoints).
+    - Manual tester confirmation items (e.g., "Verify login flow and session storage in browser").
+  * Stage 3 (Prod) pre-deploy custom checklists:
+    - Automated DB migration checks.
+    - Manual checks (e.g., "Verify third-party API keys in remote .env").
+- Gatekeeper Logic: Keep the "Approve & Merge" and "Deploy to Live" buttons disabled until all checklist items (both automated and manual) for that stage are marked complete.
+
+---
+
+### 5. Multi-Stage Pipeline Tracker & Best Practices
+
+Display the workflow as three distinct visual stage cards with status badges (`⏳ Pending`, `🔄 In Progress`, `✅ Passed`, `❌ Failed`) and expandable live terminal logs streaming stdout/stderr in real-time.
+
+#### Stage 1: Local Development (Windows)
+- Trigger: Button labeled "Run Pre-Flight & Ship".
+- Pre-Flight Validations:
+  * Clean Working Tree: Verifies there are no untracked/destructive changes.
+  * Secret & Credential Leak Scan: Scans staged files for hardcoded API keys, passwords, or accidental `.env` inclusions.
+  * Branch Protection Guard: Blocks pushing straight to `main` or `master`.
+  * Fast Shift-Left Tests: Runs local linters/formatters and quick unit tests.
+- Actions:
+  * On Pass: Stages changes (`git add -A`), commits with the user message under the active Git identity, pushes branch to origin, and opens/prints a GitHub PR link (`gh pr create --fill`).
+  * On Failure: Halts immediately, turns badge red, and shows error details without creating a PR.
+
+#### Stage 2: QA & Verification (Linux)
+- Actions & Buttons:
+  * "Pull & Setup": Checks out specified branch, hard resets to `origin/<branch>`, and auto-installs dependencies (`npm install`, `pip install`, etc.).
+  * "Run Automated Tests": Executes complete automated test suites (unit, integration, E2E) with formatted pass/fail logs.
+  * "Launch QA App": Starts application server in background mode and automatically opens `http://localhost:<port>` in the default browser using `xdg-open` for manual testing.
+  * "Stop QA App": Gracefully terminates the running local QA server/containers.
+  * "Approve & Merge": Merges the validated branch into `main` (or triggers `gh pr merge --auto --merge`) and pushes to `main`.
+
+#### Stage 3: Production Deployment (Oracle Cloud VM)
+- Actions & Buttons:
+  * "Deploy to Live":
+    1. Pre-Deploy DB Backup: Automatically executes a remote database backup/snapshot before touching files.
+    2. SSH Execution: Securely connects via SSH to the Oracle Cloud VM, pulls the latest `main`, and runs production builds/database migrations.
+    3. Service Restart: Restarts services/containers (Docker Compose, systemd, or PM2).
+    4. Automated Health Check & Auto-Rollback: Performs an HTTP health check (`curl -f`). If the endpoint returns a non-200 status or times out, trigger an immediate automatic rollback to the previous stable commit/tag.
+  * "Manual Rollback": One-click button to revert the Oracle VM to the previous stable commit/tag and restart services.
+  * "VM Health & Resource Monitor": Quick live ping indicator displaying Oracle VM status, response latency, and basic memory/disk utilization.
+
+---
+
+### 6. Multi-Channel Notifications (`notifications.py`)
+- Configurable notifications via SMTP Email and Webhooks (Slack/Discord/Microsoft Teams).
+- Success Alert: On successful production deployment, broadcasts: "🟢 Production Deployment Successful - App Ready to Use" containing repo name, author, branch, commit hash, and Live URL.
+- Failure Alert: On any test, build, deploy, or auto-rollback failure, triggers an urgent alert: "🚨 Pipeline Failure in <Stage Name>" with the relevant error log snippet.
+
+---
+
+### 7. Audit Trail & Log History
+- Automatically append every pipeline operation to a local `workflow_audit.json` file.
+- Fields to log: Timestamp, Project Repo, Active Git User, Stage Name, Branch Name, Action Triggered, Status (Success/Failure), Completed Checklist Items, and Next Step.
+- Dedicated "Audit History" Tab: A searchable, filterable data table in the UI displaying all past runs.
+
+---
+
+### 8. Deliverables & Code Structure
+Provide clean, modular Python files with clear comments:
+1. `app.py`: Main Streamlit dashboard interface, custom SVG header logo rendering, and session state engine.
+2. `git_manager.py`: Git identity inspection, repository validation, secret scanning, and branch/PR operations.
+3. `runner.py`: Cross-platform command execution, live output streaming, and dependency/test auto-detection.
+4. `checklist_engine.py`: Dynamic YAML/JSON checklist parser and gatekeeper validator.
+5. `remote_deployer.py`: SSH connection manager, pre-deploy DB backup, remote health check, and auto-rollback engine.
+6. `notifications.py`: SMTP email sender and chat webhook dispatcher.
+7. `requirements.txt`: Minimal dependencies (`streamlit`, `pyyaml`, `requests`, `paramiko`, etc.).
+8. `README.md`: Quick setup instructions for both Windows and Linux environments.

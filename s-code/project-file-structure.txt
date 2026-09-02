@@ -1,0 +1,9 @@
+shipmate/
+├── app.py                 # Main Streamlit UI & Pipeline Controller
+├── git_manager.py         # Git identity, branch inspection & secret leak scan
+├── runner.py              # Cross-platform command execution & tech auto-detect
+├── checklist_engine.py    # "Checklist as Code" YAML parser & gatekeeper
+├── remote_deployer.py     # SSH deployment, DB backups, health check & auto-rollback
+├── notifications.py       # Email & Webhook notifications (Slack/Discord/Teams)
+├── requirements.txt       # Dependencies
+└── .workflow-checklist.yaml # Example project checklist

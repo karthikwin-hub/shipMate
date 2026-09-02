@@ -1,0 +1,16 @@
+Please review the generated code and ensure the following polish steps are completed:
+
+1. Setup Script / Initial Run Helper:
+   - Create a simple setup script (`setup.sh` for Linux and `setup.ps1` for Windows) that creates a virtual environment, installs dependencies from `requirements.txt`, and launches the app with `streamlit run app.py`.
+
+2. State Management & Audit Log Writer:
+   - In `app.py`, implement an internal helper function `append_audit_log(stage, action, status, details)` that writes to `workflow_audit.json` so every button click is persistently logged with an ISO timestamp.
+
+3. Cross-Platform App Launcher for Stage 2:
+   - In `runner.py`, add a function `open_browser(url)` that handles cross-platform URL opening (using `start` on Windows, `xdg-open` on Linux, and `open` on macOS) without blocking the main thread.
+
+4. Graceful Process Termination:
+   - Ensure that background server processes started during Stage 2 QA (e.g., `npm run dev` or `uvicorn`) store their PID in a local `.qa_server.pid` file so they can be reliably killed by the "Stop QA App" button.
+
+5. Pre-populated Demo Data:
+   - Add a default `.workflow-checklist.yaml` template file in the repository root so the dynamic checklist feature works right out of the box.

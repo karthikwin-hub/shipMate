@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ShipMate | Pipeline Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/shipmate.css" />
+  <style>[x-cloak]{display:none!important}</style>
+</head>
+<body x-data="shipmateApp()" x-init="init()" x-cloak>
+
+  <!-- Sticky site header -->
+  <header class="site-header">
+    <div class="site-header-inner">
+      <div class="header-bar">
+        <a class="header-brand" href="/" @click.prevent="openFleet()">
+          <img src="/assets/logo-svg.svg" alt="ShipMate" class="header-logo" />
+        </a>
+        <nav class="header-nav" aria-label="Main">
+          <button type="button" class="nav-tab" :class="activeView==='fleet' && 'active'" @click="openFleet()" title="Fleet Overview">
+            <svg class="icon" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"/></svg>
+            <span class="nav-label">Fleet</span>
+          </button>
+          <button type="button" class="nav-tab" :class="activeView==='pipeline' && 'active'" @click="openPipeline()" title="Pipeline">
+            <svg class="icon" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/></svg>
+            <span class="nav-label">Pipeline</span>
+          </button>
+          <button type="button" class="nav-tab" :class="activeView==='activity' && 'active'" @click="openActivity()" title="Activity" :disabled="!context">
+            <svg class="icon" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/></svg>
+            <span class="nav-label">Activity</span>
+          </button>
+          <button type="button" class="nav-tab" :class="activeView==='settings' && 'active'" @click="openSettings()" title="Settings" :disabled="!context">
+            <svg class="icon" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            <span class="nav-label">Settings</span>
+          </button>
+          <button type="button" class="nav-tab" :class="activeView==='secrets' && 'active'" @click="openSecrets()" title="Secrets">
+            <svg class="icon" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z"/></svg>
+            <span class="nav-label">Secrets</span>
+          </button>
+          <button type="button" class="nav-tab" @click="openAudit()" title="Audit Log">
+            <svg class="icon" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+            <span class="nav-label">Audit</span>
+          </button>
+        </nav>
+      </div>
+
+      <div class="header-toolbar" x-show="activeView !== 'fleet'">
+        <div class="header-repo-row">
+          <div class="header-repo-input repo-input-wrap">
+            <svg class="icon input-icon" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z"/></svg>
+            <input type="text" x-model="repoInput"
+              placeholder="Local path or https://github.com/user/repo"
+              class="font-mono text-sm" @keydown.enter="syncRepo()"
+              @focus="fetchBranches()" @blur="fetchBranches()" />
+            <p class="header-hint">Cross-environment gateway — append #branch or @branch to remote URLs</p>
+            <div class="header-branch-row" x-show="isRemoteInput(repoInput) && branchList.length">
+              <label class="text-xs" style="color:var(--text-muted)">Branch</label>
+              <select x-model="selectedBranch" @change="onBranchChange()" class="branch-select">
+                <template x-for="b in branchList" :key="b">
+                  <option :value="b" x-text="b"></option>
+                </template>
+              </select>
+            </div>
+          </div>
+          <button type="button" class="btn-secondary shrink-0" @click="syncRepo()">
+            <svg class="icon-sm" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
+            Sync
+          </button>
+        </div>
+        <template x-if="context">
+          <div class="header-status-row">
+            <span class="pill font-mono" :class="modeBadgeClass()" x-text="modeBadgeLabel()"></span>
+            <span class="pill pill-cyan font-mono" x-text="context.identity.branch"></span>
+            <button type="button" class="pill pill-cyan font-mono" @click="modals.identity=true"
+              x-text="context.identity.name + ' · ' + context.identity.email"></button>
+            <span class="pill pill-emerald" x-show="liveStatus">
+              <span class="status-dot ok"></span>
+              <span x-text="liveStatusLabel()"></span>
+            </span>
+          </div>
+        </template>
+      </div>
+      <div class="header-toolbar" x-show="activeView === 'fleet'">
+        <p class="header-hint" style="margin:0;padding:8px 0">
+          Register projects here, then expand one and click <strong>Open Pipeline</strong> to sync, commit, and deploy.
+        </p>
+      </div>
+    </div>
+  </header>
+
+  <div class="app-shell">
+
+    <div x-show="error" class="alert alert-error" x-text="error"></div>
+    <div x-show="loading" class="alert-info">Loading…</div>
+    <div x-show="fleetLoading && activeView==='fleet'" class="alert-info">Refreshing fleet…</div>
+
+    <!-- Fleet Overview (full width, no repo required) -->
+    <div x-show="activeView === 'fleet'" class="panel mb-6">
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+        <h2 class="section-title mb-0">Fleet Overview</h2>
+        <div class="flex flex-wrap gap-2">
+          <button class="btn-primary" @click="openProjectModal()">
+            <svg class="icon-sm" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+            Register Project
+          </button>
+          <button class="btn-secondary" @click="importRegisteredProjects()">Import Registered</button>
+          <button class="btn-secondary" @click="refreshFleet(true)" :disabled="fleetLoading">Refresh All</button>
+        </div>
+      </div>
+
+      <div x-show="!fleetProjects.length" class="text-sm text-slate-400 mb-4">
+        No projects registered. Click <strong>+ Register New Project</strong> to set Dev, QA, and Prod paths per project.
+        ShipMate does not scan folders automatically — paths are stored in <code class="font-mono text-cyan-400">~/.shipmate/projects.json</code>.
+      </div>
+
+      <template x-for="project in fleetProjects" :key="project.project_id">
+        <div class="fleet-card" :class="isFleetExpanded(project.project_id) && 'fleet-card-expanded'">
+          <div class="fleet-card-header" @click="toggleFleetExpand(project.project_id)">
+            <button type="button" class="fleet-expand-btn" :aria-expanded="isFleetExpanded(project.project_id)" @click.stop="toggleFleetExpand(project.project_id)">
+              <svg class="icon-sm fleet-chevron" :class="isFleetExpanded(project.project_id) && 'expanded'" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
+            </button>
+            <div class="fleet-card-summary">
+              <h3 class="font-bold">
+                <span x-text="project.name"></span>
+                <span class="text-slate-500 font-normal" x-text="'(' + (project.stack || 'Generic') + ')'"></span>
+              </h3>
+              <p class="text-xs text-slate-500 font-mono mt-1" x-text="'Remote: ' + (project.remote_url || '—')"></p>
+              <p class="text-xs text-slate-600 mt-1" x-show="project.last_used_at"
+                x-text="'Last opened: ' + formatLastUsed(project.last_used_at)"></p>
+            </div>
+            <div class="fleet-card-actions" @click.stop>
+              <button class="btn-secondary text-xs" @click="openProjectModal(project)">Edit</button>
+              <button class="btn-primary text-xs" @click="openProjectFromFleet(project)">Open Pipeline</button>
+              <button class="btn-ghost text-xs" @click="deleteProject(project.project_id)">Remove</button>
+            </div>
+          </div>
+
+          <div x-show="isFleetExpanded(project.project_id)" class="fleet-card-body">
+          <div class="fleet-tier-grid">
+            <template x-for="tierKey in ['dev','remote','qa','prod']" :key="tierKey">
+              <div class="fleet-tier-col">
+                <div class="tier-label"
+                  x-text="tierKey === 'dev' ? 'Dev' : tierKey === 'remote' ? 'Remote' : tierKey === 'qa' ? 'QA' : 'Prod'"></div>
+                <template x-if="fleetInspection(project.project_id)">
+                  <div>
+                    <p class="text-xs text-slate-500 font-mono mb-1"
+                      x-text="fleetInspection(project.project_id).tiers[tierKey]?.path || fleetInspection(project.project_id).tiers[tierKey]?.branch || '—'"></p>
+                    <p class="text-sm font-mono text-cyan-300"
+                      x-text="(fleetInspection(project.project_id).tiers[tierKey]?.commit_short || '—') + ' ' + (fleetInspection(project.project_id).tiers[tierKey]?.message || '').substring(0,40)"></p>
+                    <span class="pill text-xs mt-2 inline-block"
+                      :class="tierStatusClass(fleetInspection(project.project_id).tiers[tierKey]?.status)"
+                      x-text="tierStatusLabel(fleetInspection(project.project_id).tiers[tierKey]?.status)"></span>
+                    <template x-if="tierKey==='remote' && fleetInspection(project.project_id).tiers.remote?.extra?.pr?.number">
+                      <p class="text-xs text-slate-400 mt-1"
+                        x-text="'PR #' + fleetInspection(project.project_id).tiers.remote.extra.pr.number + ': ' + fleetInspection(project.project_id).tiers.remote.extra.pr.state"></p>
+                    </template>
+                    <template x-if="tierKey==='qa' && fleetInspection(project.project_id).tiers.qa?.extra?.delta">
+                      <p class="text-xs text-slate-400 mt-1" x-text="fleetInspection(project.project_id).tiers.qa.extra.delta"></p>
+                    </template>
+                    <template x-if="tierKey==='prod' && fleetInspection(project.project_id).tiers.prod?.extra?.health">
+                      <p class="text-xs text-slate-400 mt-1"
+                        x-text="'Health: ' + fleetInspection(project.project_id).tiers.prod.extra.health.label"></p>
+                    </template>
+                  </div>
+                </template>
+                <template x-if="!fleetInspection(project.project_id)">
+                  <p class="text-xs text-slate-600">Run Refresh All Sync</p>
+                </template>
+              </div>
+            </template>
+          </div>
+
+          <template x-if="fleetInspection(project.project_id)?.suggestion">
+            <div class="suggestion-banner">
+              <p class="text-sm" style="color:var(--text-secondary)">
+                <span style="color:var(--text-primary);font-weight:500">Next step:</span>
+                <span x-text="fleetInspection(project.project_id).suggestion.title + ' — ' + fleetInspection(project.project_id).suggestion.detail"></span>
+              </p>
+              <button class="btn-primary text-xs" style="height:30px;padding:0 12px"
+                @click="fleetSuggestionAction(fleetInspection(project.project_id))"
+                x-text="fleetInspection(project.project_id).suggestion.cta_label"></button>
+            </div>
+          </template>
+          </div>
+        </div>
+      </template>
+    </div>
+
+    <!-- Secrets (global scope works without an active project) -->
+    <div x-show="activeView === 'secrets'" class="panel mb-6">
+      <h2 class="text-lg font-bold mb-2">Secrets Manager</h2>
+      <p class="text-sm text-slate-500 mb-4" x-show="!repo">
+        Team / Global secrets are shared across projects (e.g. Slack webhooks, SSH keys). Open a project from Fleet to manage project-specific deploy tokens.
+      </p>
+      <div class="flex gap-2 mb-4">
+        <button class="btn-secondary" :class="secretsScope==='project' && 'active-tab'"
+          :disabled="!repo" :title="!repo ? 'Open a project from Fleet first' : ''"
+          @click="setSecretsScope('project')">Project</button>
+        <button class="btn-secondary" :class="secretsScope==='global' && 'active-tab'"
+          @click="setSecretsScope('global')">Team / Global</button>
+      </div>
+      <p class="text-xs text-slate-500 mb-4" x-text="'Backend: ' + (secrets.backend || 'local')"></p>
+      <div class="table-scroll mb-4">
+        <table class="data-table">
+          <thead><tr><th>Name</th><th>Value</th><th></th></tr></thead>
+          <tbody>
+            <template x-for="s in secrets.secrets || []" :key="s.name">
+              <tr>
+                <td class="font-mono" x-text="s.name"></td>
+                <td x-text="s.masked"></td>
+                <td><button class="text-rose-400 text-xs" @click="deleteSecret(s.name)">Delete</button></td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+      <div class="grid grid-cols-2 gap-2 mb-4">
+        <input x-model="secretName" placeholder="Secret name" />
+        <input x-model="secretValue" type="password" placeholder="Secret value" />
+      </div>
+      <button class="btn-primary mb-4" @click="saveSecret()">Save Secret</button>
+      <textarea x-model="secretImport" rows="4" placeholder="Paste .env contents" class="mb-2 font-mono text-xs"></textarea>
+      <button class="btn-secondary" @click="importSecrets()">Import .env</button>
+      <button class="btn-secondary mt-4 ml-2" @click="secretsGoBack()" x-text="context ? 'Back to Pipeline' : 'Back to Fleet'"></button>
+    </div>
+
+    <!-- Pipeline empty state (no active project) -->
+    <div x-show="activeView === 'pipeline' && !context && !loading" class="panel pipeline-empty mb-6">
+      <div class="pipeline-empty-inner">
+        <svg class="pipeline-empty-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/>
+        </svg>
+        <h2 class="pipeline-empty-title">Select a project from Fleet first</h2>
+        <p class="pipeline-empty-text">
+          Pipeline runs sync, commit, tests, and deploy for one project at a time.
+          Register projects on Fleet, expand one, then click <strong>Open Pipeline</strong>.
+        </p>
+        <p class="pipeline-empty-text" x-show="repoInput">
+          Or enter a local path or remote URL above and click <strong>Sync</strong> to load a repo directly.
+        </p>
+        <button type="button" class="btn-primary" @click="openFleet()">Go to Fleet</button>
+      </div>
+    </div>
+
+    <div x-show="context && context.working_tree && !context.working_tree.clean" class="alert alert-warn">
+      <span x-text="'Uncommitted changes (' + dirtySummary() + ')'"></span>
+      <button x-show="showDiscardButton()" class="btn-secondary text-xs" style="height:28px" @click="modals.discardCache=true">Discard cache</button>
+    </div>
+
+    <template x-if="context">
+      <div class="pipeline-grid">
+
+        <!-- Sidebar: Pipeline Overview -->
+        <aside class="pipeline-sidebar">
+          <div class="panel">
+            <h2 class="panel-title">Pipeline</h2>
+            <template x-for="stage in stages" :key="stage.id">
+              <div :class="stageCardClass(stage.id)" @click="selectStage(stage.id)">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-sm font-bold" x-text="stage.label"></span>
+                  <span class="badge" :class="statusBadge(stage.id)" x-text="statusLabel(stage.id)"></span>
+                </div>
+                <p class="text-xs text-slate-500 mb-2" x-text="stage.subtitle"></p>
+                <template x-if="stage.id === 'dev'">
+                  <div>
+                    <div class="sub-step">
+                      <span class="check-indicator" :class="builtinChecked('dev_clean_tree') && 'done'">
+                        <svg x-show="builtinChecked('dev_clean_tree')" class="icon-sm" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                      </span> Clean diff
+                    </div>
+                    <div class="sub-step">
+                      <span class="check-indicator" :class="builtinChecked('dev_tests_passed') && 'done'">
+                        <svg x-show="builtinChecked('dev_tests_passed')" class="icon-sm" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                      </span> Unit tests passed
+                    </div>
+                  </div>
+                </template>
+                <template x-if="stage.id === 'qa'">
+                  <div>
+                    <div class="sub-step">
+                      <span class="check-indicator" :class="builtinChecked('qa_tests_passed') && 'done'">
+                        <svg x-show="builtinChecked('qa_tests_passed')" class="icon-sm" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                      </span> Integration suites
+                    </div>
+                    <div class="sub-step">
+                      <span class="check-indicator" :class="builtinChecked('qa_app_health') && 'done'">
+                        <svg x-show="builtinChecked('qa_app_health')" class="icon-sm" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                      </span> QA app running
+                    </div>
+                  </div>
+                </template>
+                <template x-if="stage.id === 'prod'">
+                  <div>
+                    <div class="sub-step">
+                      <span class="check-indicator" :class="builtinChecked('prod_backup') && 'done'">
+                        <svg x-show="builtinChecked('prod_backup')" class="icon-sm" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                      </span> DB snapshot
+                    </div>
+                    <div class="sub-step">
+                      <span class="check-indicator" :class="stageStatus('prod')==='passed' && 'done'">
+                        <svg x-show="stageStatus('prod')==='passed'" class="icon-sm" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                      </span> Live deploy
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </template>
+            <p class="text-xs text-slate-600 mt-4" x-text="'PR: ' + context.pr_status"></p>
+          </div>
+        </aside>
+
+        <!-- Workspace -->
+        <main class="pipeline-main">
+
+          <!-- Pipeline views -->
+          <div x-show="activeView === 'pipeline'" class="panel">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-lg font-bold" x-text="stages.find(s=>s.id===activeStage)?.label"></h2>
+              <span class="pill font-mono" x-text="context.stack"></span>
+            </div>
+
+            <template x-if="!isStageEnabled(activeStage)">
+              <div class="mb-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-200 text-sm">
+                <p x-text="'This machine (' + context.host_os + ') is not the primary host for this stage.'"></p>
+                <label class="flex items-center gap-2 mt-2 cursor-pointer">
+                  <input type="checkbox" :checked="context.host_overrides[activeStage]"
+                    @change="toggleHostOverride(activeStage, $event.target.checked)" />
+                  Run on this host anyway
+                </label>
+              </div>
+            </template>
+
+            <!-- DEV -->
+            <template x-if="activeStage === 'dev'">
+              <p class="text-sm text-slate-400 mb-4">Shift-left checks: secret scan, lint, tests, commit, push, PR.</p>
+              <input type="text" x-model="commitMsg" placeholder="feat: add new feature" class="mb-4 font-mono" />
+              <button class="btn-primary" :disabled="!isStageEnabled('dev') || !commitMsg" @click="devShip()">
+                Run Pre-Flight &amp; Ship
+              </button>
+            </template>
+
+            <!-- QA -->
+            <template x-if="activeStage === 'qa'">
+              <p class="text-sm text-slate-400 mb-4">Pull branch, run tests, launch QA app, complete checklist, merge.</p>
+              <div x-show="context.qa_running" class="mb-3 text-emerald-400 text-sm">QA app is running</div>
+              <div class="flex flex-wrap gap-2 mb-4">
+                <button class="btn-primary" :disabled="!isStageEnabled('qa')" @click="qaAction('pull_setup')">Pull &amp; Setup</button>
+                <button class="btn-primary" :disabled="!isStageEnabled('qa')" @click="qaAction('run_tests')">Run Tests</button>
+                <button class="btn-secondary" :disabled="!isStageEnabled('qa')" @click="qaAction('launch')">Launch QA App</button>
+                <button class="btn-secondary" :disabled="!isStageEnabled('qa')" @click="qaAction('stop')">Stop QA App</button>
+                <button class="btn-secondary" :disabled="!isStageEnabled('qa')" @click="qaAction('auto_checks')">Auto Checklist</button>
+              </div>
+              <button class="btn-primary w-full" :disabled="!checklist.all_passed || !isStageEnabled('qa')"
+                @click="qaAction('merge')">Approve &amp; Merge to Main</button>
+            </template>
+
+            <!-- PROD -->
+            <template x-if="activeStage === 'prod'">
+              <p class="text-sm text-slate-400 mb-2" x-text="'Provider: ' + context.provider_label + ' (' + context.provider_name + ')'"></p>
+              <div x-show="!context.has_deploy_config" class="mb-3 p-2 rounded bg-amber-500/10 text-amber-200 text-xs">
+                No .shipmate/deploy.yaml — using legacy config
+              </div>
+              <div class="flex flex-wrap gap-2 mb-4">
+                <template x-for="check in checklist.builtin_checks || []" :key="check.id">
+                  <button class="btn-secondary text-xs" :disabled="!isStageEnabled('prod')"
+                    @click="prodAction('preflight', check.id)" x-text="'Verify: ' + check.label.substring(0,28)"></button>
+                </template>
+                <button class="btn-secondary" :disabled="!isStageEnabled('prod')" @click="prodAction('auto_checks')">Auto Checks</button>
+                <button class="btn-secondary" :disabled="!isStageEnabled('prod')" @click="prodAction('health')">Health Check</button>
+                <button class="btn-secondary" :disabled="!isStageEnabled('prod')" @click="prodAction('vm_monitor')">VM Monitor</button>
+              </div>
+              <div class="flex flex-wrap gap-2 mb-4">
+                <button class="btn-primary" :disabled="!checklist.all_passed || !isStageEnabled('prod')" @click="prodAction('deploy')">Deploy to Live</button>
+                <button class="btn-secondary" :disabled="!isStageEnabled('prod')" @click="prodAction('rollback')">Emergency Rollback</button>
+              </div>
+            </template>
+
+            <!-- Checklist -->
+            <div class="mt-6 border-t border-white/10 pt-4">
+              <h3 class="text-sm font-semibold text-slate-400 mb-3">CHECKLIST</h3>
+              <template x-for="item in checklist.items" :key="item.id">
+                <label class="check-item">
+                  <input type="checkbox" :checked="item.checked" :disabled="item.type !== 'manual'"
+                    @change="toggleChecklistItem(item)" />
+                  <span x-text="item.label"></span>
+                  <span class="text-xs text-slate-600 ml-auto" x-text="item.type"></span>
+                </label>
+              </template>
+            </div>
+
+            <!-- Terminal -->
+            <div class="mt-6">
+              <div class="flex items-center gap-2 mb-2">
+                <div class="glow-dot" :class="terminalStatus"></div>
+                <span class="text-xs font-semibold text-slate-500 tracking-widest">TERMINAL STREAM</span>
+              </div>
+              <div class="terminal" x-text="terminal || '$ awaiting command...'"></div>
+            </div>
+          </div>
+
+          <!-- Activity -->
+          <div x-show="activeView === 'activity'" class="panel">
+            <h2 class="text-lg font-bold mb-4">Activity Dashboard</h2>
+            <template x-if="activityProject">
+              <div class="stat-grid">
+                <div class="stat-card"><div class="stat-value" x-text="activityProject.summary.total_runs"></div><div class="stat-label">Total actions</div></div>
+                <div class="stat-card"><div class="stat-value" x-text="activityProject.summary.failures"></div><div class="stat-label">Failures</div></div>
+                <div class="stat-card"><div class="stat-value" style="font-size:14px" x-text="activityProject.summary.last_stage || '—'"></div><div class="stat-label">Last stage</div></div>
+                <div class="stat-card"><div class="stat-value" style="font-size:14px" x-text="activityProject.suggested_stage"></div><div class="stat-label">Suggested next</div></div>
+              </div>
+            </template>
+            <h3 class="text-sm font-semibold text-slate-400 mb-2">Timeline</h3>
+            <div class="table-scroll mb-6">
+              <template x-for="e in (activityProject?.timeline || [])" :key="e.timestamp + e.action">
+                <div class="text-xs font-mono py-1 border-b border-white/5 text-slate-400">
+                  <span x-text="(e.timestamp||'').substring(0,19)"></span> |
+                  <span class="text-cyan-400" x-text="e.stage"></span> |
+                  <span x-text="e.action + ' | ' + e.status"></span>
+                </div>
+              </template>
+            </div>
+            <h3 class="text-sm font-semibold text-slate-400 mb-2">All Projects</h3>
+            <div class="table-scroll">
+              <table class="data-table">
+                <thead><tr><th>Project</th><th>Last</th><th>Stage</th><th>Status</th></tr></thead>
+                <tbody>
+                  <template x-for="p in activityOverview" :key="p.project">
+                    <tr>
+                      <td class="font-mono text-xs" x-text="p.project.length > 40 ? '...' + p.project.slice(-37) : p.project"></td>
+                      <td x-text="(p.last_activity||'').substring(0,19)"></td>
+                      <td x-text="p.last_stage"></td>
+                      <td x-text="p.last_status"></td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+            <button class="btn-secondary mt-4" @click="activeView='pipeline'">Back to Pipeline</button>
+          </div>
+
+          <!-- Settings -->
+          <div x-show="activeView === 'settings'" class="panel">
+            <h2 class="text-lg font-bold mb-4">Project Settings</h2>
+            <template x-if="settings">
+              <div>
+                <p class="text-sm text-slate-400 mb-2">Config: <code class="font-mono text-cyan-400" x-text="settings.deploy_path"></code></p>
+                <p class="text-sm mb-4">Provider: <span x-text="settings.provider_label + ' (' + settings.provider_name + ')'"></span></p>
+                <template x-if="settings.validation_errors.length">
+                  <div class="mb-4 text-rose-400 text-sm" x-text="settings.validation_errors.join(', ')"></div>
+                </template>
+                <pre class="terminal text-xs mb-4" x-text="JSON.stringify(settings.deploy_config, null, 2) || 'No deploy config'"></pre>
+                <h3 class="text-sm font-semibold text-slate-400 mb-2">Required Secrets</h3>
+                <template x-for="key in settings.required_secrets" :key="key">
+                  <div class="secret-row">
+                    <span class="status-dot" :class="settings.secret_status[key] ? 'ok' : 'err'"></span>
+                    <span x-text="key"></span>
+                  </div>
+                </template>
+              </div>
+            </template>
+            <button class="btn-secondary mt-4" @click="activeView='pipeline'">Back to Pipeline</button>
+          </div>
+        </main>
+      </div>
+    </template>
+
+    <!-- Project Form Modal -->
+    <div x-show="modals.projectForm" class="fixed inset-0 modal-backdrop flex items-center justify-center z-50 overflow-y-auto py-8">
+      <div class="panel w-full max-w-lg mx-4">
+        <h3 class="font-bold mb-4" x-text="editingProjectId ? 'Edit Project' : 'Register New Project'"></h3>
+        <div class="space-y-2 mb-4">
+          <input x-model="projectForm.name" placeholder="Friendly name" class="w-full" />
+          <input x-model="projectForm.remote_url" placeholder="Remote URL" class="w-full font-mono text-sm" />
+          <input x-model="projectForm.stack" placeholder="Stack (e.g. FastAPI / Next.js)" class="w-full" />
+          <input x-model="projectForm.dev_path" placeholder="Dev path (Windows)" class="w-full font-mono text-sm" />
+          <input x-model="projectForm.qa_path" placeholder="QA path (Linux / cache)" class="w-full font-mono text-sm" />
+          <input x-model="projectForm.prod_ssh_host" placeholder="Prod SSH host" class="w-full font-mono text-sm" />
+          <input x-model="projectForm.prod_remote_path" placeholder="Prod remote path" class="w-full font-mono text-sm" />
+          <input x-model="projectForm.health_url" placeholder="Health URL" class="w-full font-mono text-sm" />
+          <select x-model="projectForm.provider" class="w-full text-sm">
+            <option value="oracle_vm">Oracle VM</option>
+            <option value="vercel">Vercel</option>
+            <option value="firebase">Firebase</option>
+          </select>
+        </div>
+        <div class="flex flex-wrap gap-2 mb-4">
+          <button class="btn-secondary text-xs" @click="autoPopulateProjectFromRepo()">Auto-populate from current repo</button>
+        </div>
+        <div class="flex gap-2">
+          <button class="btn-primary" @click="saveProject()">Save</button>
+          <button class="btn-secondary" @click="modals.projectForm=false">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Repo Choice Modal -->
+    <div x-show="modals.repoChoice" class="fixed inset-0 modal-backdrop flex items-center justify-center z-50">
+      <div class="panel w-full max-w-lg mx-4">
+        <h3 class="font-bold mb-2">Registered Local Clone Found</h3>
+        <p class="text-sm text-slate-400 mb-4">Choose whether to use your local workspace or ShipMate's isolated cache copy.</p>
+        <template x-for="match in repoChoice.matches" :key="match.path">
+          <div class="mb-3 p-3 rounded-lg bg-white/5 border border-white/10">
+            <p class="font-mono text-sm text-cyan-300" x-text="match.path"></p>
+            <p class="text-xs text-slate-500 mt-1" x-text="'Working tree: ' + matchDirtySummary(match)"></p>
+            <button class="btn-primary mt-3 w-full" @click="chooseLocalWorkspace(match)">Use Local Workspace</button>
+          </div>
+        </template>
+        <button class="btn-secondary w-full mt-2" @click="chooseCacheWorkspace()">Use Isolated Cache</button>
+        <button class="btn-secondary w-full mt-2" @click="modals.repoChoice=false">Cancel</button>
+      </div>
+    </div>
+
+    <!-- Discard Cache Modal -->
+    <div x-show="modals.discardCache" class="fixed inset-0 modal-backdrop flex items-center justify-center z-50">
+      <div class="panel w-full max-w-md mx-4">
+        <h3 class="font-bold mb-2 text-rose-300">Discard Cache Changes?</h3>
+        <p class="text-sm text-slate-400 mb-4">
+          This will permanently discard uncommitted changes in the ShipMate cache copy.
+          Your local workspace elsewhere will NOT be affected.
+        </p>
+        <div class="flex gap-2">
+          <button class="btn-primary bg-rose-600 hover:bg-rose-500" @click="discardCacheChanges()">Discard</button>
+          <button class="btn-secondary" @click="modals.discardCache=false">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Identity Modal -->
+    <div x-show="modals.identity" class="fixed inset-0 modal-backdrop flex items-center justify-center z-50" @click.self="modals.identity=false">
+      <div class="panel w-full max-w-md mx-4">
+        <h3 class="font-bold mb-4">Git Identity Override</h3>
+        <input x-model="identityName" placeholder="Name" class="mb-3" />
+        <input x-model="identityEmail" placeholder="Email" class="mb-4" />
+        <div class="flex gap-2">
+          <button class="btn-primary" @click="saveIdentity()">Save</button>
+          <button class="btn-secondary" @click="modals.identity=false">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Audit Modal -->
+    <div x-show="modals.audit" class="fixed inset-0 modal-backdrop flex items-center justify-center z-50" @click.self="modals.audit=false">
+      <div class="panel w-full max-w-3xl mx-4 max-h-[80vh] overflow-hidden flex flex-col">
+        <h3 class="font-bold mb-4">Audit Log</h3>
+        <input x-model="auditFilter" placeholder="Filter..." class="mb-3" @input.debounce.300ms="loadAudit()" />
+        <div class="table-scroll flex-1">
+          <table class="data-table">
+            <thead><tr><th>Time</th><th>Stage</th><th>Action</th><th>Status</th></tr></thead>
+            <tbody>
+              <template x-for="e in auditEntries" :key="e.timestamp + e.action + e.project">
+                <tr>
+                  <td x-text="(e.timestamp||'').substring(0,19)"></td>
+                  <td x-text="e.stage"></td>
+                  <td x-text="e.action"></td>
+                  <td x-text="e.status"></td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+        <button class="btn-secondary mt-4" @click="modals.audit=false">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

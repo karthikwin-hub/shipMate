@@ -1,0 +1,37 @@
+secrets:
+  backend: local                  # local | infisical
+  infisical:
+    site_url: https://app.infisical.com
+  local:
+    vault_dir: ~/.shipmate/vault
+  global_project:
+    project_slug: shipmate-team
+    environment: shared
+
+notifications:
+  webhook_url: "${WEBHOOK_URL}"
+  webhook_type: "discord"
+  smtp:
+    server: "${SMTP_SERVER}"
+    port: 587
+    user_secret: SMTP_USER
+    password_secret: SMTP_PASSWORD
+    from_email: "${SMTP_FROM}"
+    to_email: "${SMTP_TO}"
+
+audit:
+  file: "workflow_audit.json"
+
+# Registered local project paths and last sync mode are stored in ~/.shipmate/config.json
+# (not in this file). ShipMate uses registered paths only for local-vs-cache discovery.
+
+# Legacy fallback — prefer per-project .shipmate/deploy.yaml
+oracle_vm:
+  host: "129.153.x.x"
+  user: "ubuntu"
+  key_path: "~/.ssh/id_rsa"
+  remote_path: "/var/www/myapp"
+  health_url: "http://my-domain.com/health"
+  backup_command: "git rev-parse HEAD > .last_stable_commit && cp -r data/ backup/ 2>/dev/null || true"
+  deploy_command: "git pull origin main"
+  restart_command: "docker compose down && docker compose up -d --build"

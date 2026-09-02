@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+.env
+shipmate_config.yaml
+workflow_audit.json
+.venv/
+venv/
+*.egg-info/
+.shipmate/
+.streamlit/secrets.toml

@@ -1,0 +1,82 @@
+**"Checklist as Code"**
+
+Because the checklist lives in the repo, any checklist changes made during development on the **Windows Dev machine** will automatically travel with the branch to the **Linux QA machine** and be enforced by the dashboard before deployment.
+
+---
+
+### 1. Default Built-in Pipeline Checklists
+
+The dashboard should run standard system pre-checks automatically:
+
+* **Dev Stage (Pre-PR):**
+* `[ ]` Working tree clean (no untracked/uncommitted files).
+* `[ ]` Active branch is not `main` / `master`.
+* `[ ]` Local unit tests and linter passed.
+
+
+* **QA Stage (Pre-Approval):**
+* `[ ]` Automated test suite execution passed (0 failures).
+* `[ ]` Local app launched and responded with HTTP `200 OK`.
+* `[ ]` Branch is rebased/up-to-date with remote `main`.
+
+
+* **Prod Stage (Pre-Deploy):**
+* `[ ]` Oracle VM SSH connection verified.
+* `[ ]` Target environment variables / `.env` present on remote.
+* `[ ]` Pre-deployment database backup completed.
+
+
+
+---
+
+### 2. Dynamic, Project-Specific Checklists (`.checklist.yaml` or `.checklist.json`)
+
+To support project-specific requirements that change per feature (e.g., *"Run schema migration #42"*, *"Update Stripe webhook secrets"*, *"Test dark-mode UI on Chrome"*), each project includes a dynamic checklist file at its root.
+
+#### Example: `.workflow-checklist.yaml` (inside project root)
+
+```yaml
+qa_manual_checklist:
+  - id: smoke_login
+    label: "Verify user login and JWT session persistence"
+    type: "manual" # Requires human checkbox in UI
+
+  - id: api_health
+    label: "Verify /api/v1/health returns 200"
+    type: "automated_command"
+    command: "curl -s -o /dev/null -w '%{http_code}' http://localhost:8000/api/v1/health | grep 200"
+
+prod_pre_deploy_checklist:
+  - id: db_migration_needed
+    label: "Run Django/Prisma DB migrations before restart"
+    type: "automated_command"
+    command: "python manage.py migrate --check"
+
+  - id: env_keys
+    label: "Verify new STRIPE_PUBLIC_KEY is set in remote .env"
+    type: "manual"
+
+```
+
+---
+
+### 3. How the Dashboard Renders Dynamic Checklists
+
+When the dashboard opens a project, it dynamically parses `.workflow-checklist.yaml`:
+
+```text
+┌────────────────────────────────────────────────────────────────────────┐
+│  🧪 Stage 2: QA Verification Checklist (Dynamic for this Branch)      │
+├────────────────────────────────────────────────────────────────────────┤
+│  [✔] Automated Test Suite (Pytest / Jest)        ── [PASSED]           │
+│  [✔] Health Check (http://localhost:8000/health) ── [PASSED]           │
+│  [ ] Verify user login and session persistence   ── [Manual Click]     │
+│  [ ] Verify Stripe webhook test payload          ── [Manual Click]     │
+├────────────────────────────────────────────────────────────────────────┤
+│  ⚠️ [Approve & Merge] button remains DISABLED until all boxes are checked │
+└────────────────────────────────────────────────────────────────────────┘
+
+```
+
+* **Branch-Aware:** If a developer adds a new check to `.workflow-checklist.yaml` on their feature branch, the QA machine immediately displays the new checklist item as soon as `qa-pull` runs.
+* **Audit Trail Integration:** When the QA tester clicks "Approve", the checklist responses and who verified them are stored in `workflow_audit.json`.

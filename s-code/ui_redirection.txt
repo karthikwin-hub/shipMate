@@ -1,0 +1,78 @@
+Streamlit is too visually restrictive. I want to build a truly ELITE, modern developer tool named "ShipMate" with a UI aesthetic matching Linear.app, Vercel, and Raycast.
+
+### Tech Stack:
+1. Backend: Python `FastAPI` + `uvicorn` + `subprocess`/`paramiko` (lightweight, runs locally on port 5000).
+2. Frontend: Modern single-page UI (`index.html`) using Tailwind CSS (via CDN), Lucide Icons, and Vanilla/Alpine.js for real-time WebSocket terminal output.
+3. Single Launch Command: A `start.py` script that launches the FastAPI server and automatically opens the UI in the browser.
+
+---
+
+### Design System Requirements (Linear / Vercel Aesthetic):
+- Color Palette: Deep slate/black `#090d16` and `#0d1117`, ultra-subtle border lines (`rgba(255,255,255,0.08)`), glowing accent rings (`#38bdf8` Cyan, `#10b981` Emerald, `#f43f5e` Rose).
+- Typography: Inter / Plus Jakarta Sans for UI, JetBrains Mono for commit hashes, paths, and terminal logs.
+- Layout: 2-Column Split Dashboard:
+  * Left Sidebar (1/3 width): Interactive pipeline stage tracker (Dev -> QA -> Prod) with live step status checkmarks, commit author pill, and repo branch selector.
+  * Right Action Workspace (2/3 width): Action controls, dynamic interactive checklists parsed from `.workflow-checklist.yaml`, and an embedded real-time dark terminal console with animated glowing status dots.
+
+---
+
+### Core Pipeline Capabilities:
+1. Header Bar:
+   - Target repo path switcher.
+   - Active Git User chip: `user.name <user.email>` with a one-click modal to override config locally.
+   - Remote origin URL and PR status indicator (`gh pr view`).
+   - Oracle Cloud VM latency ping badge (`● Live: 24ms`).
+
+2. Stage 1: Dev (Windows):
+   - Pre-flight secret leak scanner (regex checks for API keys/tokens).
+   - Fast lint & unit test runner.
+   - Commit & PR dispatch with GitHub CLI integration.
+
+3. Stage 2: QA & Verification (Linux):
+   - "Pull & Install": Fetches branch, resets hard, auto-detects stack (Node, Python, Go, Rust), and installs deps.
+   - "Run Automated Tests": Real-time output streaming directly into the terminal window.
+   - "Launch QA App": Starts dev server and opens browser port via cross-platform launcher (`xdg-open` / `start`).
+   - Dynamic "Checklist as Code": Parses `.workflow-checklist.yaml` and enforces completion before unlocking "Approve & Merge".
+
+4. Stage 3: Live Deploy (Oracle VM):
+   - Automated remote database snapshot/backup via SSH before code touch.
+   - Pull `main`, rebuild containers, restart systemd/Docker services.
+   - Live HTTP health check assertion. If it fails, trigger an automatic rollback to `.last_stable_commit`.
+   - One-click Emergency Manual Rollback button.
+
+5. Notifications & Audit:
+   - Webhook & SMTP email dispatcher on success/failure.
+   - Searchable, structured JSON audit log modal.
+
+Please provide the complete implementation:
+- `server.py` (FastAPI backend + WebSocket log streamer)
+- `static/index.html` (Elite Tailwind CSS dashboard)
+- `start.py` (One-click launcher)
+- `requirements.txt`
+
+Preview
+
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│  ⚡ ShipMate   [ 📁 /Cursor/my-app ▾ ]   [ 🌿 feature/auth-jwt ]   ● VM: 18ms    ⌘K Search   ⚙️    │
+├────────────────────────────────────────┬─────────────────────────────────────────────────────────┤
+│  PIPELINE OVERVIEW                     │  ACTIVE CONSOLE & ACTIONS                               │
+│                                        │                                                         │
+│  [1] LOCAL DEV (Windows)       PASSED  │  Stage 2: QA & Verification (Linux)                     │
+│      └─ Clean diff & 0 leaks    [✔]    │  ──────────────────────────────────────────             │
+│      └─ Unit tests: 42 passed   [✔]    │  Branch: `feature/auth-jwt` | Last commit: 4f82a9       │
+│                                        │                                                         │
+│  [2] QA VERIFICATION         ► ACTIVE  │  [ 📥 Pull & Sync ]  [ 🧪 Run Pytest ]  [ 🌐 Open App ] │
+│      └─ Dependencies synced     [✔]    │                                                         │
+│      └─ Integration suites      [✔]    │  DYNAMIC CHECKLIST (Code as Checklist)                  │
+│      └─ Manual smoke check      [ ]    │  [x] Smoke test login & JWT storage in localStorage     │
+│                                        │  [ ] Verify Stripe checkout webhook locally             │
+│  [3] PROD DEPLOY (Oracle)      LOCKED  │                                                         │
+│      └─ Automated DB snapshot          │  ┌── TERMINAL STREAM ─────────────────────────────────┐ │
+│      └─ Zero-downtime roll             │  │ $ pytest -v --disable-warnings                     │ │
+│      └─ Auto-rollback guard            │  │ tests/test_auth.py::test_jwt_sign PASSED    [0.12s]│ │
+│                                        │  │ ────────────────────────────────────────────────── │ │
+│                                        │  │ 42 passed, 0 warnings in 1.84s (100% SUCCESS)      │ │
+│                                        │  └────────────────────────────────────────────────────┘ │
+│                                        │                                                         │
+│                                        │  [ ✅ Approve & Merge Branch to Main ]                  │
+└────────────────────────────────────────┴─────────────────────────────────────────────────────────┘
